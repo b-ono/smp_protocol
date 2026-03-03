@@ -40,3 +40,20 @@ add_subdirectory(tests)
 
 add_executable(minimal_target_example examples/minimal_target.c)
 target_link_libraries(minimal_target_example PRIVATE smp)
+
+add_executable(complete_upload_demo examples/complete_upload_demo.c)
+target_link_libraries(complete_upload_demo PRIVATE smp)
+target_include_directories(complete_upload_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-src/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-build
+)
+
+add_executable(error_scenarios_demo examples/error_scenarios_demo.c)
+target_link_libraries(error_scenarios_demo PRIVATE smp)
+target_include_directories(error_scenarios_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-src/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-build
+)
+
+add_executable(integration_target_example examples/integration_target.c)
+target_link_libraries(integration_target_example PRIVATE smp)
