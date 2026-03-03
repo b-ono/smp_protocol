@@ -1,4 +1,4 @@
-# sem_protocol
+# SMP-Protocol
 
 Small, transport-agnostic SMP target library for MCUboot image upload in C.
 
