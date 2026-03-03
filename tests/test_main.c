@@ -21,7 +21,7 @@ static int run_upload(struct smp_ctx *ctx, struct fake_io *io, const uint8_t *fr
 static int test_api_contract(void) {
     struct fake_io io = {0};
     struct fake_platform plat = {0};
-    struct smp_transport_io t = { fake_read, fake_write, &io };
+    struct smp_transport_io t = { .read = fake_read, .write = fake_write, .ctx = &io };
     struct smp_platform_ops p = { fake_slot_begin, fake_slot_write, fake_slot_finalize, fake_set_pending, &plat };
     struct smp_ctx ctx;
     return smp_init(&ctx, &t, &p, NULL);
@@ -30,7 +30,7 @@ static int test_api_contract(void) {
 static int test_upload_happy_path(void) {
     struct fake_io io = {0};
     struct fake_platform plat = {0};
-    struct smp_transport_io t = { fake_read, fake_write, &io };
+    struct smp_transport_io t = { .read = fake_read, .write = fake_write, .ctx = &io };
     struct smp_platform_ops p = { fake_slot_begin, fake_slot_write, fake_slot_finalize, fake_set_pending, &plat };
     struct smp_ctx ctx;
     uint8_t req[64];
@@ -61,7 +61,7 @@ static int test_upload_happy_path(void) {
 static int test_upload_invalid_offset_returns_expected(void) {
     struct fake_io io = {0};
     struct fake_platform plat = {0};
-    struct smp_transport_io t = { fake_read, fake_write, &io };
+    struct smp_transport_io t = { .read = fake_read, .write = fake_write, .ctx = &io };
     struct smp_platform_ops p = { fake_slot_begin, fake_slot_write, fake_slot_finalize, fake_set_pending, &plat };
     struct smp_ctx ctx;
     uint8_t req[64];
@@ -83,7 +83,7 @@ static int test_upload_invalid_offset_returns_expected(void) {
 static int test_upload_finalize_failure_maps_io_error(void) {
     struct fake_io io = {0};
     struct fake_platform plat = {0};
-    struct smp_transport_io t = { fake_read, fake_write, &io };
+    struct smp_transport_io t = { .read = fake_read, .write = fake_write, .ctx = &io };
     struct smp_platform_ops p = { fake_slot_begin, fake_slot_write, fake_slot_finalize, fake_set_pending, &plat };
     struct smp_ctx ctx;
     uint8_t req[64];
@@ -102,7 +102,7 @@ static int test_upload_finalize_failure_maps_io_error(void) {
 static int test_unknown_command_maps_not_supported(void) {
     struct fake_io io = {0};
     struct fake_platform plat = {0};
-    struct smp_transport_io t = { fake_read, fake_write, &io };
+    struct smp_transport_io t = { .read = fake_read, .write = fake_write, .ctx = &io };
     struct smp_platform_ops p = { fake_slot_begin, fake_slot_write, fake_slot_finalize, fake_set_pending, &plat };
     struct smp_ctx ctx;
     uint8_t frame[SMP_HEADER_SIZE] = {2u, 0u, 0u, 0u, 0u, 99u, 0u, 77u};
@@ -116,7 +116,7 @@ static int test_unknown_command_maps_not_supported(void) {
 static int test_fragmented_read_and_partial_write(void) {
     struct fake_io io = {0};
     struct fake_platform plat = {0};
-    struct smp_transport_io t = { fake_read, fake_write, &io };
+    struct smp_transport_io t = { .read = fake_read, .write = fake_write, .ctx = &io };
     struct smp_platform_ops p = { fake_slot_begin, fake_slot_write, fake_slot_finalize, fake_set_pending, &plat };
     struct smp_ctx ctx;
     uint8_t req[64];
