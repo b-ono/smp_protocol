@@ -175,12 +175,12 @@ int main(void) {
         const char *name;
         test_fn fn;
     } tests[] = {
-        {"api_contract", test_api_contract},
-        {"upload_happy_path", test_upload_happy_path},
-        {"invalid_offset", test_upload_invalid_offset_returns_expected},
-        {"finalize_failure", test_upload_finalize_failure_maps_io_error},
-        {"unknown_command", test_unknown_command_maps_not_supported},
-        {"fragmented_read_partial_write", test_fragmented_read_and_partial_write},
+        { .name = "api_contract", .fn = test_api_contract },
+        { .name = "upload_happy_path", .fn = test_upload_happy_path },
+        { .name = "invalid_offset", .fn = test_upload_invalid_offset_returns_expected },
+        { .name = "finalize_failure", .fn = test_upload_finalize_failure_maps_io_error },
+        { .name = "unknown_command", .fn = test_unknown_command_maps_not_supported },
+        { .name = "fragmented_read_partial_write", .fn = test_fragmented_read_and_partial_write },
     };
     size_t i;
 
