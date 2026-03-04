@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(sem_protocol C)
+project(smp_protocol C)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -35,25 +35,29 @@ target_include_directories(smp
 
 target_link_libraries(smp PRIVATE tinycbor)
 
-enable_testing()
-add_subdirectory(tests)
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests
+endif()
 
-add_executable(minimal_target_example examples/minimal_target.c)
-target_link_libraries(minimal_target_example PRIVATE smp)
+if (BUILD_EXAMPLES)
+    add_executable(minimal_target_example examples/minimal_target.c)
+    target_link_libraries(minimal_target_example PRIVATE smp)
 
-add_executable(complete_upload_demo examples/complete_upload_demo.c)
-target_link_libraries(complete_upload_demo PRIVATE smp)
-target_include_directories(complete_upload_demo PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-src/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-build
-)
+    add_executable(complete_upload_demo examples/complete_upload_demo.c)
+    target_link_libraries(complete_upload_demo PRIVATE smp)
+    target_include_directories(complete_upload_demo PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-src/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-build
+    )
 
-add_executable(error_scenarios_demo examples/error_scenarios_demo.c)
-target_link_libraries(error_scenarios_demo PRIVATE smp)
-target_include_directories(error_scenarios_demo PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-src/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-build
-)
+    add_executable(error_scenarios_demo examples/error_scenarios_demo.c)
+    target_link_libraries(error_scenarios_demo PRIVATE smp)
+    target_include_directories(error_scenarios_demo PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-src/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/build/_deps/tinycbor-build
+    )
 
-add_executable(integration_target_example examples/integration_target.c)
-target_link_libraries(integration_target_example PRIVATE smp)
+    add_executable(integration_target_example examples/integration_target.c)
+    target_link_libraries(integration_target_example PRIVATE smp)
+endif()
