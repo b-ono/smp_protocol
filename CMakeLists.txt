@@ -37,7 +37,7 @@ target_link_libraries(smp PRIVATE tinycbor)
 
 if(BUILD_TESTING)
     enable_testing()
-    add_subdirectory(tests
+    add_subdirectory(tests)
 endif()
 
 if (BUILD_EXAMPLES)
