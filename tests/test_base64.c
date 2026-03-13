@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <smp/smp_base64.h>
 #include <string.h>
 
@@ -5,19 +6,16 @@ typedef int (*test_fn)(void);
 
 static int test_base64_encode_empty(void)
 {
-    char out[4];
-    size_t out_len;
-    
-    if (smp_base64_encode_size(0) != 4) {
+    char out[1] = {0};
+    size_t out_len = 99;
+
+    if (smp_base64_encode_size(0) != 0) {
         return 1;
     }
-    if (smp_base64_encode(NULL, 0, out, 4, &out_len) != 0) {
+    if (smp_base64_encode(NULL, 0, out, sizeof(out), &out_len) != 0) {
         return 1;
     }
-    if (out_len != 4) {
-        return 1;
-    }
-    if (memcmp(out, "AAAA", 4) != 0) {
+    if (out_len != 0) {
         return 1;
     }
     return 0;
@@ -111,11 +109,11 @@ static int test_base64_decode_empty(void)
 {
     uint8_t out[4];
     size_t out_len;
-    
-    if (smp_base64_decode_size(4) != 3) {
+
+    if (smp_base64_decode_size(0) != 0) {
         return 1;
     }
-    if (smp_base64_decode("AAAA", 4, out, 4, &out_len) != 0) {
+    if (smp_base64_decode("", 0, out, sizeof(out), &out_len) != 0) {
         return 1;
     }
     if (out_len != 0) {
@@ -254,6 +252,88 @@ static int test_base64_newline_handling(void)
     }
     if (out_len != 1) {
         return 1;
+    }
+    return 0;
+}
+
+static int test_base64_decode_rejects_invalid_third_char(void)
+{
+    uint8_t out[4];
+    size_t out_len;
+
+    if (smp_base64_decode("QU?D", 4, out, sizeof(out), &out_len) != -1) {
+        return 1;
+    }
+    return 0;
+}
+
+static int test_base64_decode_rejects_invalid_fourth_char(void)
+{
+    uint8_t out[4];
+    size_t out_len;
+
+    if (smp_base64_decode("QUJ?", 4, out, sizeof(out), &out_len) != -1) {
+        return 1;
+    }
+    return 0;
+}
+
+static int test_base64_decode_rejects_non_ascii_input(void)
+{
+    uint8_t out[4];
+    size_t out_len;
+    char in[4] = {'Q', 'U', (char)0xFF, 'D'};
+
+    if (smp_base64_decode(in, sizeof(in), out, sizeof(out), &out_len) != -1) {
+        return 1;
+    }
+    return 0;
+}
+
+static int test_base64_decode_respects_output_capacity(void)
+{
+    uint8_t out[1];
+    size_t out_len;
+
+    if (smp_base64_decode("QUI=", 4, out, sizeof(out), &out_len) != -1) {
+        return 1;
+    }
+    return 0;
+}
+
+int run_base64_tests(void)
+{
+    const struct {
+        const char *name;
+        test_fn fn;
+    } tests[] = {
+        { "base64_encode_empty", test_base64_encode_empty },
+        { "base64_encode_single_byte", test_base64_encode_single_byte },
+        { "base64_encode_two_bytes", test_base64_encode_two_bytes },
+        { "base64_encode_three_bytes", test_base64_encode_three_bytes },
+        { "base64_encode_four_bytes", test_base64_encode_four_bytes },
+        { "base64_decode_empty", test_base64_decode_empty },
+        { "base64_decode_single", test_base64_decode_single },
+        { "base64_decode_two", test_base64_decode_two },
+        { "base64_decode_three", test_base64_decode_three },
+        { "base64_roundtrip", test_base64_roundtrip },
+        { "base64_buffer_overflow_encode", test_base64_buffer_overflow_encode },
+        { "base64_buffer_overflow_decode", test_base64_buffer_overflow_decode },
+        { "base64_invalid_char_decode", test_base64_invalid_char_decode },
+        { "base64_misaligned_padding_decode", test_base64_misaligned_padding_decode },
+        { "base64_newline_handling", test_base64_newline_handling },
+        { "base64_invalid_third_char", test_base64_decode_rejects_invalid_third_char },
+        { "base64_invalid_fourth_char", test_base64_decode_rejects_invalid_fourth_char },
+        { "base64_non_ascii_input", test_base64_decode_rejects_non_ascii_input },
+        { "base64_decode_capacity", test_base64_decode_respects_output_capacity },
+    };
+    size_t i;
+
+    for (i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+        if (tests[i].fn() != 0) {
+            printf("FAIL %s\n", tests[i].name);
+            return 1;
+        }
     }
     return 0;
 }

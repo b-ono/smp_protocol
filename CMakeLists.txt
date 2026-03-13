@@ -24,6 +24,7 @@ add_library(smp
     src/smp_dispatch.c
     src/smp_cmd_img_upload.c
     src/smp_cbor_adapter.c
+    src/smp_base64.c
 )
 
 target_include_directories(smp

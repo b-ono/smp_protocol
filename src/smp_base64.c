@@ -1,5 +1,7 @@
 #include "smp/smp_base64.h"
 
+#include <stdbool.h>
+
 /* RFC 4648 base64 encoding table */
 const char smp_base64_encode_table[] = 
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -59,8 +61,8 @@ int smp_base64_decode(const char *in, size_t in_len,
                       uint8_t *out, size_t out_capacity, size_t *out_len)
 {
     size_t i, j;
-    size_t valid_chars = 0;
-    int padding = 0;
+    size_t padding = 0;
+    size_t required;
     
     /* Skip trailing newlines */
     while (in_len > 0 && (in[in_len - 1] == '\n' || in[in_len - 1] == '\r')) {
@@ -72,61 +74,66 @@ int smp_base64_decode(const char *in, size_t in_len,
         return 0;
     }
     
-    /* Count padding and validate length */
-    if (in[in_len - 1] == '=') {
-        padding++;
-        if (in[in_len - 2] == '=') {
-            padding++;
-        }
-    }
-    
     /* Length must be multiple of 4 */
     if (in_len % 4 != 0) {
         return -1;
     }
-    
-for (i = 0, j = 0; i < in_len; i += 4, j += 3) {
-        int8_t sextet_a = (i < in_len) ? 
-                          smp_base64_decode_table[(uint8_t)in[i]] : -1;
-        int8_t sextet_b = (i + 1 < in_len) ? 
-                          smp_base64_decode_table[(uint8_t)in[i + 1]] : -1;
-        int8_t sextet_c = (i + 2 < in_len && in[i + 2] != '=') ? 
-                          smp_base64_decode_table[(uint8_t)in[i + 2]] : 0;
-        int8_t sextet_d = (i + 3 < in_len && in[i + 3] != '=') ? 
-                          smp_base64_decode_table[(uint8_t)in[i + 3]] : 0;
-        
-        /* Check for invalid characters */
-        if ((sextet_a == -1 && i < in_len) || 
-            (sextet_b == -1 && i + 1 < in_len && in[i + 1] != '=')) {
+
+    for (i = 0; i < in_len; ++i) {
+        uint8_t ch = (uint8_t)in[i];
+        bool is_last_block = i >= (in_len - 4);
+        bool can_be_padding = (i % 4) >= 2;
+
+        if (ch == '=') {
+            if (!is_last_block || !can_be_padding) {
+                return -1;
+            }
+            ++padding;
+            continue;
+        }
+
+        if (padding != 0 || ch > 127 || smp_base64_decode_table[ch] < 0) {
             return -1;
         }
-        
-        /* Check padding alignment */
-        if (sextet_a == -1 || sextet_b == -1) {
+    }
+
+    if (padding > 2) {
+        return -1;
+    }
+    if (padding == 1 && in[in_len - 1] != '=') {
+        return -1;
+    }
+    if (padding == 2 && (in[in_len - 2] != '=' || in[in_len - 1] != '=')) {
+        return -1;
+    }
+
+    required = (in_len / 4) * 3 - padding;
+    if (out_capacity < required) {
+        return -1;
+    }
+
+    for (i = 0, j = 0; i < in_len; i += 4) {
+        int8_t sextet_a = smp_base64_decode_table[(uint8_t)in[i + 0]];
+        int8_t sextet_b = smp_base64_decode_table[(uint8_t)in[i + 1]];
+        int8_t sextet_c = (in[i + 2] == '=') ? 0 : smp_base64_decode_table[(uint8_t)in[i + 2]];
+        int8_t sextet_d = (in[i + 3] == '=') ? 0 : smp_base64_decode_table[(uint8_t)in[i + 3]];
+
+        if (sextet_a < 0 || sextet_b < 0 || sextet_c < 0 || sextet_d < 0) {
             return -1;
         }
-        
-        uint32_t triple = (sextet_a << 18) | (sextet_b << 12) | 
+
+        uint32_t triple = (sextet_a << 18) | (sextet_b << 12) |
                           (sextet_c << 6) | sextet_d;
-        
-        out[j + 0] = (triple >> 16) & 0xFF;
+
+        out[j++] = (triple >> 16) & 0xFF;
         if (i + 2 < in_len && in[i + 2] != '=') {
-            out[j + 1] = (triple >> 8) & 0xFF;
+            out[j++] = (triple >> 8) & 0xFF;
         }
         if (i + 3 < in_len && in[i + 3] != '=') {
-            out[j + 2] = triple & 0xFF;
+            out[j++] = triple & 0xFF;
         }
-        
-        valid_chars += 4;
     }
-    
-    /* Calculate actual output length based on padding */
-    if (padding == 2) {
-        *out_len = ((in_len / 4) - 1) * 3 + 1;
-    } else if (padding == 1) {
-        *out_len = (in_len / 4) * 3 - 1;
-    } else {
-        *out_len = (in_len / 4) * 3;
-    }
+
+    *out_len = j;
     return 0;
 }

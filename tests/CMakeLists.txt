@@ -1,6 +1,7 @@
 add_executable(smp_tests
     test_main.c
     test_support.c
+    test_base64.c
 )
 
 target_include_directories(smp_tests

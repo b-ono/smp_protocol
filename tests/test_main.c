@@ -170,6 +170,8 @@ static int test_fragmented_read_and_partial_write(void) {
     return 0;
 }
 
+int run_base64_tests(void);
+
 int main(void) {
     struct {
         const char *name;
@@ -181,6 +183,7 @@ int main(void) {
         { .name = "finalize_failure", .fn = test_upload_finalize_failure_maps_io_error },
         { .name = "unknown_command", .fn = test_unknown_command_maps_not_supported },
         { .name = "fragmented_read_partial_write", .fn = test_fragmented_read_and_partial_write },
+        { .name = "base64", .fn = run_base64_tests },
     };
     size_t i;
 
